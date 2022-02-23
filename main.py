@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 from sklearn import datasets 
 
-# Fungsi untuk menentukan apakah p3 berada di atas atau di bawah garis p1-p2
+# Fungsi untuk menghitung jarak titik p3 ke garis p1-p2
 def location(p1, p2, p3):
 	return p1[0]*p2[1] + p3[0]*p1[1] + p2[0]*p3[1] - p3[0]*p2[1] - p1[0]*p3[1] - p2[0]*p1[1]
 
@@ -11,7 +11,8 @@ def location(p1, p2, p3):
 def merge(arr1, arr2):
 	return arr1 + arr2[1:]
 
-def convexHullAtas(data):
+# Fungsi bantuan untuk memproses algoritma convex hull
+def convexHull(data, times):
 	if (len(data) == 2):
 		return data
 	else:
@@ -19,69 +20,40 @@ def convexHullAtas(data):
 		max = 0
 		idxmax = 0
 		for i in range(1,len(data)-1):
-			n = location(data[0], data[len(data)-1], data[i])
+			n = location(data[0], data[len(data)-1], data[i])*times
 			if (n > max):
 				max = n
 				idxmax = i
 
-		# sebelah kiri dari idxmax
+		# Filterisasi titik di sebelah kiri yang berada di luar garis
 		kiri = [data[0]]
 		for i in range(1,idxmax):
-			n = location(data[0], data[idxmax], data[i])
+			n = location(data[0], data[idxmax], data[i])*times
 			if (n > 0):
 				kiri.append(data[i])
-		
-		kiri.append(data[idxmax])
+		kiri += [data[idxmax]]
 
-		# sebelah kanan dari idxmax
+		# Filterisasi titik di sebelah kanan yang berada di luar garis
 		kanan = [data[idxmax]]
 		for i in range(idxmax+1,len(data)-1):
-			n = location(data[idxmax], data[len(data)-1], data[i])
+			n = location(data[idxmax], data[len(data)-1], data[i])*times
 			if (n > 0):
 				kanan.append(data[i])
 		
-		kanan.append(data[len(data)-1])
-		return merge(convexHullAtas(kiri), convexHullAtas(kanan))
+		kanan += [data[len(data)-1]]
+		return merge(convexHull(kiri, times), convexHull(kanan, times))
 
-def convexHullBawah(data):
-	if (len(data) == 2):
-		return data
-	else:
-		# cari titik terjauh dari garis p1-p2
-		min = 0
-		idxmin = 0
-		for i in range(1,len(data)-1):
-			n = location(data[0], data[len(data)-1], data[i])
-			if (n < min):
-				min = n
-				idxmin = i
-
-		# sebelah kiri dari idxmin
-		kiri = [data[0]]
-		for i in range(1,idxmin):
-			n = location(data[0], data[idxmin], data[i])
-			if (n < 0):
-				kiri.append(data[i])
-		
-		kiri.append(data[idxmin])
-
-		# sebelah kanan dari idxmin
-		kanan = [data[idxmin]]
-		for i in range(idxmin+1,len(data)-1):
-			n = location(data[idxmin], data[len(data)-1], data[i])
-			if (n < 0):
-				kanan.append(data[i])
-		
-		kanan.append(data[len(data)-1])
-		return merge(convexHullBawah(kiri), convexHullBawah(kanan))
-
+# Fungsi awal dalam algoritma convex hull
 def myConvexHull(data):
+	# urutkan data dalam keadaan menaik
 	quickSort(data, 0, len(data)-1)
 	if (len(data) == 2):
+		# base case
 		return data
 	else:
 		atas = [data[0]]
 		bawah = [data[0]]
+		# pisahkan titik titik di atas dan bawah garis ujung kiri dan kanan
 		for i in range(1,len(data)-1):
 			n = location(data[0], data[len(data)-1], data[i])
 			if (n > 0):
@@ -89,9 +61,10 @@ def myConvexHull(data):
 			elif (n < 0):
 				bawah.append(data[i])
 		
-		atas.append(data[len(data)-1])
-		bawah.append(data[len(data)-1])
-		return merge(convexHullAtas(atas), convexHullBawah(bawah)[::-1])
+		atas += [data[len(data)-1]]
+		bawah += [data[len(data)-1]]
+		# mengembalikan gabungan dari convex hull atas dan bawah
+		return merge(convexHull(atas, 1), convexHull(bawah, -1)[::-1])
 	
 # Fungsi untuk mempartisi array
 def partition(arr, low, high):
@@ -119,16 +92,12 @@ def quickSort(arr, low, high):
 		return arr
 	if low < high:
 		pi = partition(arr, low, high)
-
 		quickSort(arr, low, pi-1)
 		quickSort(arr, pi+1, high)
 
 data = datasets.load_iris() 
-#create a DataFrame 
 df = pd.DataFrame(data.data, columns=data.feature_names) 
 df['Target'] = pd.DataFrame(data.target) 
-print(df.shape)
-print(df)
 df.head()
 
 #visualisasi hasil ConvexHull
@@ -140,8 +109,7 @@ plt.ylabel(data.feature_names[1])
 for i in range(len(data.target_names)):
 	bucket = df[df['Target'] == i]
 	bucket = bucket.iloc[:,[0,1]].values
-	hull = myConvexHull(bucket) #bagian ini diganti dengan hasil implementasi ConvexHull Divide & Conquer
-	print("hasilnya : " + str(hull))
+	hull = myConvexHull(bucket)				# Pemanggilan fungsi Convex Hull
 	plt.scatter(bucket[:, 0], bucket[:, 1], label=data.target_names[i])
 	hull = np.transpose(hull)
 	plt.plot(hull[0], hull[1], color=colors[i])
