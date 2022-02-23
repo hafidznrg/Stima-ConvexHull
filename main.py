@@ -2,21 +2,105 @@ import numpy as np
 import pandas as pd 
 import matplotlib.pyplot as plt 
 from sklearn import datasets 
-import matplotlib.pyplot as plt
 
 
 # Fungsi untuk menentukan apakah p3 berada di atas atau di bawah garis p1-p2
 def location(p1, p2, p3):
 	return p1[0]*p2[1] + p3[0]*p1[1] + p2[0]*p3[1] - p3[0]*p2[1] - p1[0]*p3[1] - p2[0]*p1[1]
 
+def merge(arr1, arr2):
+	if (len(arr1) == 0):
+		return arr2
+	if (len(arr2) == 0):
+		return arr1
+	if (arr1[0][0] < arr2[0][0]):
+		return [arr1[0]] + arr2 if (len(arr1) == 0) else [arr1[0]] + merge(arr1[1:], arr2)
+	elif (arr1[0][0] > arr2[0][0]):
+		return [arr2[0]] + arr2 if (len(arr2) == 0) else [arr2[0]] + merge(arr1, arr2[1:])
+	else:
+		if (arr1[0][1] < arr2[0][1]):
+			return [arr1[0]] + arr2 if (len(arr1) == 0) else [arr1[0]] + merge(arr1[1:], arr2)
+		elif (arr1[0][1] > arr2[0][1]):
+			return [arr2[0]] + arr2 if (len(arr2) == 0) else [arr2[0]] + merge(arr1, arr2[1:])
+		else:
+			# kasus ketika arr1[0] == arr2[0]
+			if (len(arr1) == 1 and len(arr2) == 1):
+				return [arr1[0]]
+			elif (len(arr1) == 1):
+				return [arr1[0]] + arr2[1:]
+			elif (len(arr2) == 1):
+				return [arr2[0]] + arr1[1:]
+			else:
+				return [arr1[0]] + merge(arr1[1:], arr2[1:])
+
+
 def convexHullAtas(data):
-	return []
+	if (len(data) == 2):
+		return data
+	else:
+		# cari titik terjauh dari garis p1-p2
+		max = 0
+		idxmax = 0
+		for i in range(1,len(data)-1):
+			n = location(data[0], data[len(data)-1], data[i])
+			if (n > max):
+				max = n
+				idxmax = i
+
+		# sebelah kiri dari idxmax
+		kiri = [data[0]]
+		for i in range(1,idxmax):
+			n = location(data[0], data[idxmax], data[i])
+			if (n > 0):
+				kiri.append(data[i])
+		
+		kiri.append(data[idxmax])
+
+		# sebelah kanan dari idxmax
+		kanan = [data[idxmax]]
+		for i in range(idxmax+1,len(data)-1):
+			n = location(data[idxmax], data[len(data)-1], data[i])
+			if (n > 0):
+				kanan.append(data[i])
+		
+		kanan.append(data[len(data)-1])
+
+		res = merge(convexHullAtas(kiri), convexHullAtas(kanan))
+		return res
 
 def convexHullBawah(data):
-	return []
+	if (len(data) == 2):
+		return data
+	else:
+		# cari titik terjauh dari garis p1-p2
+		min = 0
+		idxmin = 0
+		for i in range(1,len(data)-1):
+			n = location(data[0], data[len(data)-1], data[i])
+			if (n < min):
+				min = n
+				idxmin = i
 
-def merge(arr1, arr2):
-	return []
+		# sebelah kiri dari idxmin
+		kiri = [data[0]]
+		for i in range(1,idxmin):
+			n = location(data[0], data[idxmin], data[i])
+			if (n < 0):
+				kiri.append(data[i])
+		
+		kiri.append(data[idxmin])
+
+		# sebelah kanan dari idxmin
+		kanan = [data[idxmin]]
+		for i in range(idxmin+1,len(data)-1):
+			n = location(data[idxmin], data[len(data)-1], data[i])
+			if (n < 0):
+				kanan.append(data[i])
+		
+		kanan.append(data[len(data)-1])
+
+		res = merge(convexHullBawah(kiri), convexHullBawah(kanan))
+		return res
 
 def myConvexHull(data):
 	quickSort(data, 0, len(data)-1)
@@ -68,6 +152,27 @@ def quickSort(arr, low, high):
 		quickSort(arr, low, pi-1)
 		quickSort(arr, pi+1, high)
 
-data = [[10,5],[7,4],[8,3],[9,2],[6,8],[1,1],[5,0],[6,6],[2,7],[3,8]]
-data = np.array(data)
-result = myConvexHull(data)
+data = datasets.load_iris() 
+#create a DataFrame 
+df = pd.DataFrame(data.data, columns=data.feature_names) 
+df['Target'] = pd.DataFrame(data.target) 
+print(df.shape)
+print(df)
+df.head()
+
+#visualisasi hasil ConvexHull
+plt.figure(figsize = (10, 6))
+colors = ['b','r','g']
+plt.title('Petal Width vs Petal Length')
+plt.xlabel(data.feature_names[0])
+plt.ylabel(data.feature_names[1])
+for i in range(len(data.target_names)):
+	bucket = df[df['Target'] == i]
+	bucket = bucket.iloc[:,[0,1]].values
+	hull = myConvexHull(bucket) #bagian ini diganti dengan hasil implementasi ConvexHull Divide & Conquer
+	print("hasilnya : " + str(hull))
+	plt.scatter(bucket[:, 0], bucket[:, 1], label=data.target_names[i])
+	# for simplex in hull.simplices:
+	#     plt.plot(bucket[simplex, 0], bucket[simplex, 1], colors[i])
+plt.legend()
+plt.waitforbuttonpress()
