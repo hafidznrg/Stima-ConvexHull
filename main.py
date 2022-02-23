@@ -3,36 +3,13 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 from sklearn import datasets 
 
-
 # Fungsi untuk menentukan apakah p3 berada di atas atau di bawah garis p1-p2
 def location(p1, p2, p3):
 	return p1[0]*p2[1] + p3[0]*p1[1] + p2[0]*p3[1] - p3[0]*p2[1] - p1[0]*p3[1] - p2[0]*p1[1]
 
+# Fungsi untuk menggabungkan 2 buah array dan menghapus duplikat (elemen terakhir arr 1 = elemen pertama arr2)
 def merge(arr1, arr2):
-	if (len(arr1) == 0):
-		return arr2
-	if (len(arr2) == 0):
-		return arr1
-	if (arr1[0][0] < arr2[0][0]):
-		return [arr1[0]] + arr2 if (len(arr1) == 0) else [arr1[0]] + merge(arr1[1:], arr2)
-	elif (arr1[0][0] > arr2[0][0]):
-		return [arr2[0]] + arr2 if (len(arr2) == 0) else [arr2[0]] + merge(arr1, arr2[1:])
-	else:
-		if (arr1[0][1] < arr2[0][1]):
-			return [arr1[0]] + arr2 if (len(arr1) == 0) else [arr1[0]] + merge(arr1[1:], arr2)
-		elif (arr1[0][1] > arr2[0][1]):
-			return [arr2[0]] + arr2 if (len(arr2) == 0) else [arr2[0]] + merge(arr1, arr2[1:])
-		else:
-			# kasus ketika arr1[0] == arr2[0]
-			if (len(arr1) == 1 and len(arr2) == 1):
-				return [arr1[0]]
-			elif (len(arr1) == 1):
-				return [arr1[0]] + arr2[1:]
-			elif (len(arr2) == 1):
-				return [arr2[0]] + arr1[1:]
-			else:
-				return [arr1[0]] + merge(arr1[1:], arr2[1:])
-
+	return arr1 + arr2[1:]
 
 def convexHullAtas(data):
 	if (len(data) == 2):
@@ -64,9 +41,7 @@ def convexHullAtas(data):
 				kanan.append(data[i])
 		
 		kanan.append(data[len(data)-1])
-
-		res = merge(convexHullAtas(kiri), convexHullAtas(kanan))
-		return res
+		return merge(convexHullAtas(kiri), convexHullAtas(kanan))
 
 def convexHullBawah(data):
 	if (len(data) == 2):
@@ -98,9 +73,7 @@ def convexHullBawah(data):
 				kanan.append(data[i])
 		
 		kanan.append(data[len(data)-1])
-
-		res = merge(convexHullBawah(kiri), convexHullBawah(kanan))
-		return res
+		return merge(convexHullBawah(kiri), convexHullBawah(kanan))
 
 def myConvexHull(data):
 	quickSort(data, 0, len(data)-1)
@@ -118,9 +91,7 @@ def myConvexHull(data):
 		
 		atas.append(data[len(data)-1])
 		bawah.append(data[len(data)-1])
-		res  = merge(convexHullAtas(atas), convexHullBawah(bawah))
-		return res
-
+		return merge(convexHullAtas(atas), convexHullBawah(bawah)[::-1])
 	
 # Fungsi untuk mempartisi array
 def partition(arr, low, high):
@@ -172,7 +143,7 @@ for i in range(len(data.target_names)):
 	hull = myConvexHull(bucket) #bagian ini diganti dengan hasil implementasi ConvexHull Divide & Conquer
 	print("hasilnya : " + str(hull))
 	plt.scatter(bucket[:, 0], bucket[:, 1], label=data.target_names[i])
-	# for simplex in hull.simplices:
-	#     plt.plot(bucket[simplex, 0], bucket[simplex, 1], colors[i])
+	hull = np.transpose(hull)
+	plt.plot(hull[0], hull[1], color=colors[i])
 plt.legend()
 plt.waitforbuttonpress()
