@@ -19,6 +19,7 @@ def merge(arr1, arr2):
 	return []
 
 def myConvexHull(data):
+	quickSort(data, 0, len(data)-1)
 	if (len(data) == 2):
 		return data
 	else:
@@ -40,18 +41,21 @@ def myConvexHull(data):
 # Fungsi untuk mempartisi array
 def partition(arr, low, high):
 	i = (low-1)		 		# index elemen pertama
-	pivot = arr[high][0]	# pivot
+	pivot = arr[high]		# pivot
 
 	for j in range(low, high):
 		# penukaran elemen sesuai dengan urutan menaik
-		if (arr[j][0] < pivot):
+		if (arr[j][0] < pivot[0]):
 			i += 1
-			arr[i], arr[j] = arr[j], arr[i]
-		elif (arr[j][0] == pivot and arr[j][1] < arr[i][1]):
+			arr[i][0], arr[j][0] = arr[j][0], arr[i][0]
+			arr[i][1], arr[j][1] = arr[j][1], arr[i][1]
+		elif (arr[j][0] == pivot[0] and arr[j][1] < pivot[1]):
 				i += 1
-				arr[i], arr[j] = arr[j], arr[i] 
+				arr[i][0], arr[j][0] = arr[j][0], arr[i][0]
+				arr[i][1], arr[j][1] = arr[j][1], arr[i][1]
 
-	arr[i+1], arr[high] = arr[high], arr[i+1]
+	arr[i+1][0], arr[high][0] = arr[high][0], arr[i+1][0]
+	arr[i+1][1], arr[high][1] = arr[high][1], arr[i+1][1]
 	return (i+1)
 
 # Fungsi untuk mengurutkan array dengan algoritma QuickSort
@@ -64,7 +68,6 @@ def quickSort(arr, low, high):
 		quickSort(arr, low, pi-1)
 		quickSort(arr, pi+1, high)
 
-data = [(10,5),(7,4),(8,3),(9,2),(6,8),(1,1),(5,0),(6,6),(2,7),(3,8)]
-quickSort(data, 0, len(data)-1)
+data = [[10,5],[7,4],[8,3],[9,2],[6,8],[1,1],[5,0],[6,6],[2,7],[3,8]]
 data = np.array(data)
-# result = myConvexHull(data)
+result = myConvexHull(data)
