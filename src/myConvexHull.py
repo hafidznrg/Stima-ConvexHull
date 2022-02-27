@@ -1,8 +1,3 @@
-import numpy as np 
-import pandas as pd 
-import matplotlib.pyplot as plt 
-from sklearn import datasets 
-
 # Fungsi untuk menghitung jarak titik p3 ke garis p1-p2
 def location(p1, p2, p3):
 	return p1[0]*p2[1] + p3[0]*p1[1] + p2[0]*p3[1] - p3[0]*p2[1] - p1[0]*p3[1] - p2[0]*p1[1]
@@ -94,24 +89,3 @@ def quickSort(arr, low, high):
 		pi = partition(arr, low, high)
 		quickSort(arr, low, pi-1)
 		quickSort(arr, pi+1, high)
-
-data = datasets.load_iris() 
-df = pd.DataFrame(data.data, columns=data.feature_names) 
-df['Target'] = pd.DataFrame(data.target) 
-df.head()
-
-#visualisasi hasil ConvexHull
-plt.figure(figsize = (10, 6))
-colors = ['b','r','g']
-plt.title('Petal Width vs Petal Length')
-plt.xlabel(data.feature_names[0])
-plt.ylabel(data.feature_names[1])
-for i in range(len(data.target_names)):
-	bucket = df[df['Target'] == i]
-	bucket = bucket.iloc[:,[0,1]].values
-	hull = myConvexHull(bucket)				# Pemanggilan fungsi Convex Hull
-	plt.scatter(bucket[:, 0], bucket[:, 1], label=data.target_names[i])
-	hull = np.transpose(hull)
-	plt.plot(hull[0], hull[1], color=colors[i])
-plt.legend()
-plt.waitforbuttonpress()
